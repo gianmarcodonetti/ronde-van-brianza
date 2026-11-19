@@ -1,0 +1,446 @@
+:root {
+    --bg: #f5f5f2;
+    --panel: #ffffff;
+    --ink: #111111;
+    --mut: #686868;
+    --line: #dcdcd7;
+    --y: #f3cf00;
+    --r: #d20a16;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px)
+}
+
+html {
+    scroll-padding-top: 96px;
+    scroll-behavior: smooth
+}
+
+* {
+    box-sizing: border-box
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 17px/1.55 "Work Sans", system-ui, sans-serif
+}
+
+h1,
+h2,
+h3,
+.big {
+    font-family: "Big Shoulders Display", Impact, "Arial Narrow", sans-serif;
+    text-transform: uppercase;
+    line-height: .86;
+    margin: 0;
+    font-weight: 900
+}
+
+a {
+    color: inherit
+}
+
+:focus-visible {
+    outline: 3px solid var(--y);
+    outline-offset: 3px
+}
+
+.hero {
+    min-height: 720px;
+    background: var(--panel);
+    color: var(--ink);
+    padding: 18px 4vw 46px;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--line)
+}
+
+.hero nav {
+    min-height: 72px;
+    display: flex;
+    align-items: center;
+    gap: clamp(14px, 2.2vw, 34px);
+    flex-wrap: wrap;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    border-bottom: 1px solid var(--line)
+}
+
+.hero nav a {
+    text-decoration: none
+}
+
+.hero nav a:hover {
+    color: var(--r)
+}
+
+.nav-brand {
+    margin-right: auto;
+    display: flex;
+    flex-direction: column;
+    line-height: .72
+}
+
+.nav-brand b {
+    font-family: "Big Shoulders Display", Impact, sans-serif;
+    font-size: 29px;
+    letter-spacing: .02em
+}
+
+.nav-brand small {
+    margin-top: 6px;
+    font-size: 7px;
+    letter-spacing: .38em
+}
+
+.hero h1 {
+    max-width: 1250px;
+    font-size: clamp(76px, 11.8vw, 170px);
+    margin: clamp(86px, 10vh, 130px) auto 0;
+    letter-spacing: -.035em
+}
+
+.ed {
+    display: inline-block;
+    background: var(--y);
+    color: var(--ink);
+    padding: .02em .16em .08em;
+    margin-left: .08em;
+    transform: rotate(-2deg)
+}
+
+.tag {
+    max-width: 34ch;
+    margin: 26px 0 0;
+    font-size: clamp(17px, 1.6vw, 22px);
+    line-height: 1.45;
+    color: var(--mut)
+}
+
+.facts {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-top: 44px;
+    border-top: 1px solid var(--ink);
+}
+
+.facts div {
+    min-width: 0;
+    padding: 18px 18px 0 0;
+    border-right: 1px solid var(--line)
+}
+
+.facts div:last-child {
+    border-right: 0
+}
+
+.facts b {
+    display: block;
+    font: 900 clamp(32px, 3.8vw, 52px)/1 "Big Shoulders Display", Impact, sans-serif
+}
+
+.facts span {
+    display: block;
+    min-height: 38px;
+    margin-top: 8px;
+    color: var(--mut);
+    font-size: 13px
+}
+
+.cd {
+    display: flex;
+    gap: 22px;
+    margin-top: 28px
+}
+
+.cd div {
+    min-width: 58px;
+    font: 900 34px/1 "Big Shoulders Display", Impact, sans-serif
+}
+
+.cd small {
+    display: block;
+    margin-top: 7px;
+    font: 700 10px "Work Sans", sans-serif;
+    color: var(--mut);
+    text-transform: uppercase;
+    letter-spacing: .08em
+}
+
+section {
+    padding: 110px 4vw
+}
+
+section+section {
+    border-top: 1px solid var(--line)
+}
+
+h2 {
+    font-size: clamp(58px, 8.5vw, 112px);
+    margin-bottom: 24px;
+    letter-spacing: -.02em
+}
+
+.lead {
+    max-width: 68ch;
+    color: var(--mut);
+    font-size: clamp(16px, 1.2vw, 19px)
+}
+
+.wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
+    gap: 32px;
+    margin-top: 42px
+}
+
+.box {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    padding: 14px
+}
+
+svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    touch-action: none
+}
+
+.ro {
+    display: flex;
+    gap: 34px;
+    flex-wrap: wrap;
+    margin: 0 0 18px
+}
+
+.ro b {
+    display: block;
+    font: 900 42px/1 "Big Shoulders Display", Impact, sans-serif
+}
+
+.ro span {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--mut);
+    text-transform: uppercase;
+    letter-spacing: .05em
+}
+
+.tabs {
+    display: flex;
+    gap: 0;
+    flex-wrap: wrap;
+    margin: 30px 0 0
+}
+
+.tabs button,
+.btn {
+    min-height: 44px;
+    font: 700 13px "Work Sans", sans-serif;
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--ink);
+    border-right: 0;
+    padding: 10px 15px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    text-transform: uppercase;
+    letter-spacing: .04em
+}
+
+.tabs button:last-child {
+    border-right: 1px solid var(--ink)
+}
+
+.tabs button[aria-pressed=true] {
+    background: var(--y);
+    color: #111
+}
+
+.btn {
+    width: fit-content;
+    border: 0;
+    background: var(--ink);
+    color: var(--panel);
+    padding: 13px 18px
+}
+
+.cinfo {
+    min-height: 4.8em;
+    margin: 18px 0 0;
+    color: var(--mut)
+}
+
+.seg {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 0;
+    margin-top: 38px;
+    border-top: 1px solid var(--line);
+    border-left: 1px solid var(--line)
+}
+
+.seg a {
+    min-height: 230px;
+    background: var(--panel);
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 24px;
+    text-decoration: none;
+    display: block;
+    transition: background .18s ease, color .18s ease
+}
+
+.seg a:hover {
+    background: var(--ink);
+    color: var(--panel)
+}
+
+.seg a:hover p {
+    color: var(--panel)
+}
+
+.seg h3 {
+    font-size: 42px
+}
+
+.seg p {
+    margin: 14px 0 0;
+    color: var(--mut);
+    font-size: 14px
+}
+
+.pts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin: 24px 0
+}
+
+label {
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: var(--mut);
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: .05em
+}
+
+input {
+    font: 700 20px "Work Sans", sans-serif;
+    width: 100%;
+    height: 52px;
+    padding: 8px 12px;
+    background: var(--panel);
+    color: var(--ink);
+    border: 1px solid var(--ink)
+}
+
+.tot {
+    margin-top: 18px;
+    font: 900 clamp(72px, 12vw, 150px)/.9 "Big Shoulders Display", Impact, sans-serif
+}
+
+.note {
+    font-size: 14px;
+    color: var(--mut);
+    max-width: 70ch
+}
+
+footer {
+    background: var(--ink);
+    color: var(--panel);
+    padding: 80px 4vw 36px
+}
+
+footer .big {
+    font-size: clamp(64px, 12vw, 170px);
+    color: var(--panel)
+}
+
+@media(max-width:860px) {
+    .hero {
+        min-height: 610px
+    }
+
+    .hero nav {
+        min-height: 62px
+    }
+
+    .hero nav a:not(:nth-last-child(-n+2)) {
+        display: none
+    }
+
+    .hero h1 {
+        margin-top: 70px
+    }
+
+    .facts {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+
+    .facts div:nth-child(2) {
+        border-right: 0
+    }
+
+    .facts div:nth-child(n+3) {
+        margin-top: 14px;
+        border-top: 1px solid var(--line)
+    }
+
+    section {
+        padding: 72px 5vw
+    }
+
+    .wrap {
+        grid-template-columns: 1fr
+    }
+
+    .tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap
+    }
+
+    .tabs button {
+        white-space: nowrap
+    }
+}
+
+@media(max-width:520px) {
+    .hero {
+        padding-inline: 20px
+    }
+
+    .hero nav a {
+        display: none
+    }
+
+    .hero h1 {
+        font-size: clamp(66px, 21vw, 100px)
+    }
+
+    .facts b {
+        font-size: 30px
+    }
+
+    section,
+    footer {
+        padding-inline: 20px
+    }
+
+    h2 {
+        font-size: 54px
+    }
+
+    .seg {
+        grid-template-columns: 1fr
+    }
+}
