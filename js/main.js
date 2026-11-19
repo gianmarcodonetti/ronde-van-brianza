@@ -23,47 +23,146 @@ C.forEach(c => { el("path", { d: c.p.map((p, i) => (i ? "L" : "M") + X([p[0], p[
 C.forEach(c => { const p = c.sa, l = LBL[c.n]; el("circle", { cx: X(p), cy: Y(p), r: 6, fill: "#f5c400", stroke: "#0f1c2a", "stroke-width": 2.5 }, map); const q = el("text", { x: X(p) + l[0], y: Y(p) + l[1], fill: "currentColor", "font-size": 14, "font-weight": 600, "text-anchor": l[2] }, map); q.textContent = c.n });
 const mp = [MV.la, MV.lo]; el("circle", { cx: X(mp), cy: Y(mp), r: 7, fill: "#d1121f", stroke: "#fff", "stroke-width": 2.5 }, map); const mq = el("text", { x: X(mp) - 10, y: Y(mp) + 8, fill: "currentColor", "font-size": 14, "font-weight": 600, "text-anchor": "end" }, map); mq.textContent = "Panorama";
 const dot = el("circle", { cx: X(R[0]), cy: Y(R[0]), r: 8, fill: "#0f1c2a", stroke: "#f5c400", "stroke-width": 4 }, map);
-// map zoom
-const mapResetView = () => map.setAttribute("viewBox", "0 0 560 520");
-let mapDrag = null;
-function mapZoom(factor, pointX = 280, pointY = 260) {
-    const parts = map.getAttribute("viewBox").split(" ").map(Number);
-    let [vx, vy, vw, vh] = parts;
-    const nextWidth = Math.max(160, Math.min(560, vw * factor));
-    const nextHeight = nextWidth * 520 / 560;
-    const px = (pointX - vx) / vw;
-    const py = (pointY - vy) / vh;
-    vx += (vw - nextWidth) * px;
-    vy += (vh - nextHeight) * py;
-    map.setAttribute("viewBox", `${vx} ${vy} ${nextWidth} ${nextHeight}`);
+// map zoom and pan
+const mapBounds = { x: 0, y: 0, width: 560, height: 520 };
+const mapView = { ...mapBounds }, mapTarget = { ...mapBounds };
+const mapPointers = new Map();
+let mapGesture = null, mapFrame = null, mapFrameTime = 0;
+const mapViewBox = view => `${view.x} ${view.y} ${view.width} ${view.height}`;
+function renderMapView() {
+    map.setAttribute("viewBox", mapViewBox(mapView));
 }
-mapResetView();
-$("mapZoomIn").addEventListener("click", () => mapZoom(.72));
-$("mapZoomOut").addEventListener("click", () => mapZoom(1.39));
-$("mapReset").addEventListener("click", mapResetView);
-map.addEventListener("wheel", event => {
-    event.preventDefault();
+function animateMap(time) {
+    const ease = 1 - Math.exp(-(time - mapFrameTime) / 55);
+    mapFrameTime = time;
+    let moving = false;
+    for (const key of ["x", "y", "width", "height"]) {
+        const difference = mapTarget[key] - mapView[key];
+        if (Math.abs(difference) > .02) {
+            mapView[key] += difference * ease;
+            moving = true;
+        } else {
+            mapView[key] = mapTarget[key];
+        }
+    }
+    renderMapView();
+    if (moving) {
+        mapFrame = requestAnimationFrame(animateMap);
+    } else {
+        mapFrame = null;
+    }
+}
+function updateMapView() {
+    if (mapFrame === null) {
+        mapFrameTime = performance.now();
+        mapFrame = requestAnimationFrame(animateMap);
+    }
+}
+function mapPoint(clientX, clientY) {
     const rect = map.getBoundingClientRect();
-    const parts = map.getAttribute("viewBox").split(" ").map(Number);
-    const [vx, vy, vw, vh] = parts;
-    const px = vx + (event.clientX - rect.left) / rect.width * vw;
-    const py = vy + (event.clientY - rect.top) / rect.height * vh;
-    mapZoom(event.deltaY < 0 ? .82 : 1.22, px, py);
+    return {
+        x: Math.max(0, Math.min(560, (clientX - rect.left) / rect.width * 560)),
+        y: Math.max(0, Math.min(520, (clientY - rect.top) / rect.height * 520))
+    };
+}
+function zoomMapAt(factor, point) {
+    const nextWidth = Math.max(120, Math.min(mapBounds.width, mapTarget.width * factor));
+    const nextHeight = nextWidth * mapBounds.height / mapBounds.width;
+    const anchorX = mapTarget.x + point.x / mapBounds.width * mapTarget.width;
+    const anchorY = mapTarget.y + point.y / mapBounds.height * mapTarget.height;
+    mapTarget.width = nextWidth;
+    mapTarget.height = nextHeight;
+    mapTarget.x = anchorX - point.x / mapBounds.width * nextWidth;
+    mapTarget.y = anchorY - point.y / mapBounds.height * nextHeight;
+    updateMapView();
+}
+function zoomMapBy(factor) {
+    zoomMapAt(factor, { x: mapBounds.width / 2, y: mapBounds.height / 2 });
+}
+function mapResetView() {
+    Object.assign(mapTarget, mapBounds);
+    updateMapView();
+}
+function distanceBetween(a, b) {
+    return Math.hypot(b.x - a.x, b.y - a.y);
+}
+function centerBetween(a, b) {
+    return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+}
+function startMapGesture() {
+    const pointers = [...mapPointers.values()];
+    if (pointers.length > 1) {
+        mapGesture = {
+            type: "pinch",
+            distance: distanceBetween(pointers[0], pointers[1]),
+            center: centerBetween(pointers[0], pointers[1])
+        };
+    } else if (pointers.length === 1) {
+        mapGesture = {
+            type: "pan",
+            pointer: pointers[0].id,
+            x: pointers[0].x,
+            y: pointers[0].y,
+            view: { ...mapTarget }
+        };
+    } else {
+        mapGesture = null;
+    }
+}
+map.setAttribute("viewBox", mapViewBox(mapView));
+$("mapZoomIn").addEventListener("click", () => zoomMapBy(.72));
+$("mapZoomOut").addEventListener("click", () => zoomMapBy(1 / .72));
+$("mapReset").addEventListener("click", mapResetView);
+map.parentElement.addEventListener("wheel", event => {
+    event.preventDefault();
+    const delta = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? event.deltaY * 16 :
+        event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? event.deltaY * 400 : event.deltaY;
+    const point = mapPoint(event.clientX, event.clientY);
+    zoomMapAt(Math.exp(delta * .0012), point);
 }, { passive: false });
 map.addEventListener("pointerdown", event => {
+    event.preventDefault();
     map.setPointerCapture(event.pointerId);
-    mapDrag = { x: event.clientX, y: event.clientY, view: map.getAttribute("viewBox").split(" ").map(Number) };
+    const point = { id: event.pointerId, ...mapPoint(event.clientX, event.clientY) };
+    mapPointers.set(event.pointerId, point);
+    startMapGesture();
 });
 map.addEventListener("pointermove", event => {
-    if (!mapDrag) return;
-    const rect = map.getBoundingClientRect();
-    const [vx, vy, vw, vh] = mapDrag.view;
-    const dx = (event.clientX - mapDrag.x) / rect.width * vw;
-    const dy = (event.clientY - mapDrag.y) / rect.height * vh;
-    map.setAttribute("viewBox", `${vx - dx} ${vy - dy} ${vw} ${vh}`);
+    if (!mapPointers.has(event.pointerId)) return;
+    const point = { id: event.pointerId, ...mapPoint(event.clientX, event.clientY) };
+    mapPointers.set(event.pointerId, point);
+    const pointers = [...mapPointers.values()];
+    if (pointers.length > 1 && mapGesture && mapGesture.type === "pinch") {
+        const distance = distanceBetween(pointers[0], pointers[1]);
+        const center = centerBetween(pointers[0], pointers[1]);
+        if (mapGesture.distance > 0 && distance > 0) {
+            const factor = mapGesture.distance / distance;
+            const nextWidth = Math.max(120, Math.min(mapBounds.width, mapTarget.width * factor));
+            const nextHeight = nextWidth * mapBounds.height / mapBounds.width;
+            const anchorX = mapTarget.x + mapGesture.center.x / mapBounds.width * mapTarget.width;
+            const anchorY = mapTarget.y + mapGesture.center.y / mapBounds.height * mapTarget.height;
+            mapTarget.width = nextWidth;
+            mapTarget.height = nextHeight;
+            mapTarget.x = anchorX - center.x / mapBounds.width * nextWidth;
+            mapTarget.y = anchorY - center.y / mapBounds.height * nextHeight;
+            updateMapView();
+        }
+        mapGesture.distance = distance;
+        mapGesture.center = center;
+    } else if (pointers.length === 1 && mapGesture && mapGesture.type === "pan") {
+        const dx = (point.x - mapGesture.x) / mapBounds.width * mapGesture.view.width;
+        const dy = (point.y - mapGesture.y) / mapBounds.height * mapGesture.view.height;
+        mapTarget.x = mapGesture.view.x - dx;
+        mapTarget.y = mapGesture.view.y - dy;
+        updateMapView();
+    }
 });
-map.addEventListener("pointerup", () => { mapDrag = null });
-map.addEventListener("pointercancel", () => { mapDrag = null });
+function endMapPointer(event) {
+    mapPointers.delete(event.pointerId);
+    startMapGesture();
+}
+map.addEventListener("pointerup", endMapPointer);
+map.addEventListener("pointercancel", endMapPointer);
 // profile
 const PW = 700, PH = 280, mn = 180, mx = 510, tk = R[R.length - 1][3], PX = km => 40 + km / tk * 650, PY = e => PH - 28 - (e - mn) / (mx - mn) * (PH - 50);
 const pr = $("prof");

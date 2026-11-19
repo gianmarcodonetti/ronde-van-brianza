@@ -1,0 +1,2 @@
+Vorrei sviluppare un'applicazione web clientside, da pubblicare su github pages, dove andare a raccontare e spiegare la Ronde Van Brianza, un''uscita in bicicletta da organizzare a fine marzo 2027, in cui selezionerò dei segmenti strava qua in brianza che saranno validi per una classifica a punti finali. La pagina web deve servire come punto di riferimento per questo evento, contenendo tuti i dettagli e le informazioni di questa ride, con un aspetto grafico accattivante e una UX user friendly.
+

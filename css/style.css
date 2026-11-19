@@ -246,6 +246,15 @@ svg {
     touch-action: none
 }
 
+#map {
+    cursor: grab;
+    user-select: none
+}
+
+#map:active {
+    cursor: grabbing
+}
+
 .ro {
     display: flex;
     gap: 34px;
