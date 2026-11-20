@@ -9,12 +9,38 @@ const css = v => getComputedStyle(document.documentElement).getPropertyValue(v);
 function cd() { let s = Math.max(0, (new Date("2027-03-27T08:30:00+01:00") - Date.now()) / 1000); $("d").firstChild.nodeValue = Math.floor(s / 86400); $("h").firstChild.nodeValue = Math.floor(s % 86400 / 3600); $("m").firstChild.nodeValue = Math.floor(s % 3600 / 60) }
 cd(); setInterval(cd, 30000);
 // map projection
-const la = R.map(p => p[0]), lo = R.map(p => p[1]), k = Math.cos(45.75 * Math.PI / 180);
-const x0 = Math.min(...lo), y1 = Math.max(...la), W = Math.max(...lo) - x0, H = y1 - Math.min(...la);
-const sc = Math.min(520 / (W * k), 480 / H), ox = (560 - W * k * sc) / 2, oy = (520 - H * sc) / 2;
-const X = p => ox + (p[1] - x0) * k * sc, Y = p => oy + (y1 - p[0]) * sc;
+const la = R.map(p => p[0]), lo = R.map(p => p[1]), rad = Math.PI / 180;
+const mercatorY = latitude => Math.log(Math.tan(Math.PI / 4 + latitude * rad / 2));
+const x0 = Math.min(...lo) * rad, x1 = Math.max(...lo) * rad;
+const y0 = Math.min(...la.map(mercatorY)), y1 = Math.max(...la.map(mercatorY));
+const W = x1 - x0, H = y1 - y0;
+const sc = Math.min(560 / W, 520 / H) * .85, ox = (560 - W * sc) / 2, oy = (520 - H * sc) / 2;
+const X = p => ox + (p[1] * rad - x0) * sc, Y = p => oy + (y1 - mercatorY(p[0])) * sc;
 const map = $("map"), path = (a, b) => R.filter(p => p[3] >= a && p[3] <= b).map((p, i) => (i ? "L" : "M") + X(p).toFixed(1) + " " + Y(p).toFixed(1)).join("");
-el("path", { d: path(0, 999), fill: "none", stroke: "currentColor", "stroke-width": 3, "stroke-linejoin": "round", opacity: .55 }, map);
+const basemap = el("g", { "aria-hidden": "true" }, map);
+el("rect", { x: 0, y: 0, width: 560, height: 520, fill: "#f3f5f2" }, basemap);
+const tileZoom = 11, tileCount = 2 ** tileZoom, tileUrl = (zoom, x, y) => `https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`;
+const longitudeAt = x => (x0 + (x - ox) / sc) / rad;
+const latitudeAt = y => Math.atan(Math.sinh(y1 - (y - oy) / sc)) / rad;
+const tileXAt = longitude => Math.floor((longitude + 180) / 360 * tileCount);
+const tileYAt = latitude => Math.floor((1 - mercatorY(latitude) / Math.PI) / 2 * tileCount);
+for (let tileY = Math.max(0, tileYAt(latitudeAt(0))); tileY <= Math.min(tileCount - 1, tileYAt(latitudeAt(520))); tileY++) {
+    const north = Math.atan(Math.sinh(Math.PI * (1 - 2 * tileY / tileCount))) / rad;
+    const south = Math.atan(Math.sinh(Math.PI * (1 - 2 * (tileY + 1) / tileCount))) / rad;
+    for (let tileX = Math.max(0, tileXAt(longitudeAt(0))); tileX <= Math.min(tileCount - 1, tileXAt(longitudeAt(560))); tileX++) {
+        const west = tileX / tileCount * 360 - 180;
+        const east = (tileX + 1) / tileCount * 360 - 180;
+        const x = X([north, west]), y = Y([north, west]);
+        const width = X([south, east]) - x, height = Y([south, east]) - y;
+        el("image", {
+            href: tileUrl(tileZoom, tileX, tileY),
+            x, y, width, height, opacity: .68, preserveAspectRatio: "none"
+        }, basemap);
+    }
+}
+const routePath = path(0, 999);
+el("path", { d: routePath, fill: "none", stroke: "#fff", "stroke-width": 7, "stroke-linejoin": "round", opacity: .9 }, map);
+el("path", { d: routePath, fill: "none", stroke: "#333936", "stroke-width": 3.5, "stroke-linejoin": "round", opacity: .9 }, map);
 const hl = el("path", { d: "", fill: "none", stroke: "#f5c400", "stroke-width": 8, "stroke-linecap": "round", "stroke-linejoin": "round" }, map);
 el("circle", { cx: X(R[0]), cy: Y(R[0]), r: 9, fill: "#d1121f" }, map);
 const st = el("text", { x: X(R[0]) + 13, y: Y(R[0]) + 5, fill: "currentColor", "font-size": 15, "font-weight": 600 }, map); st.textContent = "Seregno";
