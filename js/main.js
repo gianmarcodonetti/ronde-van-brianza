@@ -33,7 +33,7 @@ function renderMapView() {
     map.setAttribute("viewBox", mapViewBox(mapView));
 }
 function animateMap(time) {
-    const ease = 1 - Math.exp(-(time - mapFrameTime) / 55);
+    const ease = 1 - Math.exp(-(time - mapFrameTime) / 30);
     mapFrameTime = time;
     let moving = false;
     for (const key of ["x", "y", "width", "height"]) {
@@ -52,11 +52,22 @@ function animateMap(time) {
         mapFrame = null;
     }
 }
-function updateMapView() {
+function updateMapView(immediate = false) {
+    if (immediate) {
+        if (mapFrame !== null) cancelAnimationFrame(mapFrame);
+        mapFrame = null;
+        Object.assign(mapView, mapTarget);
+        renderMapView();
+        return;
+    }
     if (mapFrame === null) {
         mapFrameTime = performance.now();
         mapFrame = requestAnimationFrame(animateMap);
     }
+}
+function constrainMapView() {
+    mapTarget.x = Math.max(mapBounds.x, Math.min(mapBounds.x + mapBounds.width - mapTarget.width, mapTarget.x));
+    mapTarget.y = Math.max(mapBounds.y, Math.min(mapBounds.y + mapBounds.height - mapTarget.height, mapTarget.y));
 }
 function mapPoint(clientX, clientY) {
     const rect = map.getBoundingClientRect();
@@ -65,7 +76,7 @@ function mapPoint(clientX, clientY) {
         y: Math.max(0, Math.min(520, (clientY - rect.top) / rect.height * 520))
     };
 }
-function zoomMapAt(factor, point) {
+function zoomMapAt(factor, point, immediate = false) {
     const nextWidth = Math.max(120, Math.min(mapBounds.width, mapTarget.width * factor));
     const nextHeight = nextWidth * mapBounds.height / mapBounds.width;
     const anchorX = mapTarget.x + point.x / mapBounds.width * mapTarget.width;
@@ -74,7 +85,8 @@ function zoomMapAt(factor, point) {
     mapTarget.height = nextHeight;
     mapTarget.x = anchorX - point.x / mapBounds.width * nextWidth;
     mapTarget.y = anchorY - point.y / mapBounds.height * nextHeight;
-    updateMapView();
+    constrainMapView();
+    updateMapView(immediate);
 }
 function zoomMapBy(factor) {
     zoomMapAt(factor, { x: mapBounds.width / 2, y: mapBounds.height / 2 });
@@ -113,12 +125,12 @@ map.setAttribute("viewBox", mapViewBox(mapView));
 $("mapZoomIn").addEventListener("click", () => zoomMapBy(.72));
 $("mapZoomOut").addEventListener("click", () => zoomMapBy(1 / .72));
 $("mapReset").addEventListener("click", mapResetView);
-map.parentElement.addEventListener("wheel", event => {
+map.addEventListener("wheel", event => {
     event.preventDefault();
     const delta = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? event.deltaY * 16 :
         event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? event.deltaY * 400 : event.deltaY;
     const point = mapPoint(event.clientX, event.clientY);
-    zoomMapAt(Math.exp(delta * .0012), point);
+    zoomMapAt(Math.exp(delta * .0012), point, true);
 }, { passive: false });
 map.addEventListener("pointerdown", event => {
     event.preventDefault();
@@ -145,7 +157,8 @@ map.addEventListener("pointermove", event => {
             mapTarget.height = nextHeight;
             mapTarget.x = anchorX - center.x / mapBounds.width * nextWidth;
             mapTarget.y = anchorY - center.y / mapBounds.height * nextHeight;
-            updateMapView();
+            constrainMapView();
+            updateMapView(true);
         }
         mapGesture.distance = distance;
         mapGesture.center = center;
@@ -154,7 +167,8 @@ map.addEventListener("pointermove", event => {
         const dy = (point.y - mapGesture.y) / mapBounds.height * mapGesture.view.height;
         mapTarget.x = mapGesture.view.x - dx;
         mapTarget.y = mapGesture.view.y - dy;
-        updateMapView();
+        constrainMapView();
+        updateMapView(true);
     }
 });
 function endMapPointer(event) {
